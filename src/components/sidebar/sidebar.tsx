@@ -22,7 +22,7 @@ interface SidebarProps {
 }
 
 const Sidebar = ({
-    tree,
+    tree = [],
     selectedId,
     onSelect,
     onContextMenu,
@@ -36,46 +36,45 @@ const Sidebar = ({
     onNewFileSubmit,
     handleLanguageChange,
     selectedLanguage,
-}: SidebarProps) => {
-
-    
+  }: SidebarProps) => {
     return (
-        <div className="w-64 bg-[#252526] h-full flex flex-col border-r border-[#3c3c3c]">
-            <div className="px-4 py-2 border-b border-[#3c3c3c] flex items-center justify-between">
-                <h2 className="text-xs uppercase tracking-widest text-gray-400">Explorer</h2>
-                <select
-                    value={selectedLanguage}
-                    onChange={handleLanguageChange}
-                    className="bg-[#252526] text-gray-300 text-xs border border-gray-500 rounded p-1"
-                >
-                    {Object.keys(LANGUAGE_VERSIONS).map((language) => (
-                        <option key={language} value={language}>
-                            {language}
-                        </option>
-                    ))}
-                </select>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-                {tree.map((node) => (
-                    <FileTreeNode
-                        key={node.id}
-                        node={node}
-                        selectedId={selectedId}
-                        onSelect={onSelect}
-                        onContextMenu={onContextMenu}
-                        renameTargetId={renameTargetId}
-                        renameTempName={renameTempName}
-                        onRenameNameChange={onRenameNameChange}
-                        onRenameSubmit={onRenameSubmit}
-                        newFileParentId={newFileParentId}
-                        newFileTempName={newFileTempName}
-                        onNewFileNameChange={onNewFileNameChange}
-                        onNewFileSubmit={onNewFileSubmit}
-                    />
-                ))}
-            </div>
+      <div className="w-64 bg-[#252526] h-full flex flex-col border-r border-[#3c3c3c]">
+        <div className="px-4 py-2 border-b border-[#3c3c3c] flex items-center justify-between">
+          <h2 className="text-xs uppercase tracking-widest text-gray-400">Explorer</h2>
+          <select
+            value={selectedLanguage}
+            onChange={handleLanguageChange}
+            className="bg-[#252526] text-gray-300 text-xs border border-gray-500 rounded p-1"
+          >
+            {Object.keys(LANGUAGE_VERSIONS).map((language) => (
+              <option key={language} value={language}>
+                {language}
+              </option>
+            ))}
+          </select>
         </div>
+        <div className="flex-1 overflow-y-auto">
+          {tree.map((node) => (
+            <FileTreeNode
+              key={node.id}
+              node={node}
+              selectedId={selectedId}
+              onSelect={onSelect}
+              onContextMenu={onContextMenu}
+              renameTargetId={renameTargetId}
+              renameTempName={renameTempName}
+              onRenameNameChange={onRenameNameChange}
+              onRenameSubmit={onRenameSubmit}
+              newFileParentId={newFileParentId}
+              newFileTempName={newFileTempName}
+              onNewFileNameChange={onNewFileNameChange}
+              onNewFileSubmit={onNewFileSubmit}
+            />
+          ))}
+        </div>
+      </div>
     );
-};
-
-export default Sidebar;
+  };
+  
+  export default Sidebar;
+  

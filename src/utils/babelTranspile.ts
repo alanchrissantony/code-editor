@@ -1,4 +1,3 @@
-// @ts-ignore - Babel types are incomplete
 import { transform } from '@babel/standalone';
 
 export const transpileReact = (code: string) => {

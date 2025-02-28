@@ -47,3 +47,18 @@ export const findParentId = (nodes: FileNode[], childId: string, parentId: strin
   }
   return null;
 };
+
+
+export const updateFileInTree = (
+  nodes: FileNode[],
+  fileId: string,
+  newProps: Partial<FileNode>
+): FileNode[] =>
+  nodes.map((node) => {
+    if (node.id === fileId && node.type === "file") {
+      return { ...node, ...newProps };
+    } else if (node.type === "folder" && node.children) {
+      return { ...node, children: updateFileInTree(node.children, fileId, newProps) };
+    }
+    return node;
+  });
