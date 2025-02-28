@@ -12,12 +12,12 @@ interface FileTreeNodeProps {
   selectedId: string;
   onSelect: (node: FileNode) => void;
   onContextMenu: (node: FileNode, e: MouseEvent) => void;
-  // Rename props
+
   renameTargetId: string | null;
   renameTempName: string;
   onRenameNameChange: (name: string) => void;
   onRenameSubmit: (nodeId: string) => void;
-  // New file props
+
   newFileParentId: string | null;
   newFileTempName: string;
   onNewFileNameChange: (name: string) => void;

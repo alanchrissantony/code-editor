@@ -1,132 +1,61 @@
-import React, { useState, useEffect, MouseEvent } from 'react';
-import Editor from '@monaco-editor/react';
-import { FileNode } from './types/types';
+import React, { useState, useEffect, MouseEvent } from "react";
+import Editor from "@monaco-editor/react";
+import { CODE_SNIPPETS, LANGUAGE_VERSIONS } from "./constants";
+import { FileNode } from "./types/types";
 import {
   addNodeToTree,
   deleteNodeFromTree,
   findParentId,
   renameNodeInTree,
-} from './utils/helper';
-import Sidebar from './components/sidebar/sidebar';
-import FileIcon from './components/svgs/file';
-import { PreviewCodeIcon, RunCodeIcon, Spinner } from './components/svgs/controls';
-import { executeCode } from './api/api';
-import { CODE_SNIPPETS, LANGUAGE_VERSIONS } from './constants';
-import * as Babel from '@babel/standalone';
+} from "./utils/helper";
+
+import FileIcon from "./components/svgs/file";
+import { PreviewCodeIcon, RunCodeIcon, Spinner } from "./components/svgs/controls";
+import { transpileReact } from "./utils/babelTranspile";
+import { initialTree } from "./components/file/base";
+import Sidebar from "./components/sidebar/sidebar";
+import { executeCode } from "./api/api";
 
 
-// Helper: update file in tree
 const updateFileInTree = (
   nodes: FileNode[],
   fileId: string,
   newProps: Partial<FileNode>
 ): FileNode[] =>
   nodes.map((node) => {
-    if (node.id === fileId && node.type === 'file') {
+    if (node.id === fileId && node.type === "file") {
       return { ...node, ...newProps };
-    } else if (node.type === 'folder' && node.children) {
+    } else if (node.type === "folder" && node.children) {
       return { ...node, children: updateFileInTree(node.children, fileId, newProps) };
     }
     return node;
   });
 
-// Helper: update file name extension based on language
 const updateFileNameExtension = (
   fileName: string,
   language: keyof typeof CODE_SNIPPETS
 ): string => {
   const extensionMapping: Record<keyof typeof CODE_SNIPPETS, string> = {
-    javascript: 'js',
-    typescript: 'ts',
-    python: 'py',
-    java: 'java',
-    csharp: 'cs',
-    html: 'html',
-    css: 'css',
-    react: 'jsx',
+    javascript: "js",
+    typescript: "ts",
+    python: "py",
+    java: "java",
+    csharp: "cs",
+    html: "html",
+    css: "css",
+    react: "jsx",
   };
-
-  const baseName = fileName.includes('.') ? fileName.split('.')[0] : fileName;
+  const baseName = fileName.includes(".") ? fileName.split(".")[0] : fileName;
   return `${baseName}.${extensionMapping[language]}`;
 };
 
-// Transpile React (JSX) code to JavaScript using Babel Standalone
-const transpileReact = (code: string): string => {
-  try {
-    const transpiled = Babel.transform(code, { presets: ['react'] });
-    return transpiled.code || code;
-  } catch (error) {
-    console.error("Error transpiling React code:", error);
-    return code;
-  }
-};
-
-const initialTree: FileNode[] = [
-  {
-    id: '1',
-    name: 'src',
-    type: 'folder',
-    children: [
-      {
-        id: '1-1',
-        name: 'index.js',
-        type: 'file',
-        language: 'javascript',
-        content: CODE_SNIPPETS.javascript,
-      },
-      {
-        id: '1-2',
-        name: 'App.jsx',
-        type: 'file',
-        language: 'react',
-        content: `
-import React from 'react';
-
-const App = () => {
-  return (
-    <div>
-      <h1>Hello, React!</h1>
-      <p>This is a sample React component.</p>
-    </div>
-  );
-};
-
-export default App;
-        `,
-      },
-    ],
-  },
-  {
-    id: '2',
-    name: 'public',
-    type: 'folder',
-    children: [
-      {
-        id: '2-1',
-        name: 'index.html',
-        type: 'file',
-        language: 'html',
-        content: CODE_SNIPPETS.html,
-      },
-    ],
-  },
-  {
-    id: '3',
-    name: 'style.css',
-    type: 'file',
-    language: 'css',
-    content: CODE_SNIPPETS.css || 'body { background-color: #1e1e1e; }',
-  },
-];
-
 const App: React.FC = () => {
   const [tree, setTree] = useState<FileNode[]>(initialTree);
-
   const getAllFiles = (nodes: FileNode[]): FileNode[] => {
     let files: FileNode[] = [];
     nodes.forEach((node) => {
-      if (node.type === 'file') files.push(node);
-      else if (node.type === 'folder' && node.children)
+      if (node.type === "file") files.push(node);
+      else if (node.type === "folder" && node.children)
         files = files.concat(getAllFiles(node.children));
     });
     return files;
@@ -134,7 +63,7 @@ const App: React.FC = () => {
 
   const initialFile = getAllFiles(tree)[0];
   const [currentFile, setCurrentFile] = useState<FileNode>(initialFile);
-  const [output, setOutput] = useState<string>('');
+  const [output, setOutput] = useState<string>("");
   const [showOutput, setShowOutput] = useState(true);
   const [loading, setLoading] = useState(false);
   const [contextMenu, setContextMenu] = useState<{
@@ -146,28 +75,25 @@ const App: React.FC = () => {
 
   // State for inline new file creation and renaming
   const [newFileParentId, setNewFileParentId] = useState<string | null>(null);
-  const [newFileTempName, setNewFileTempName] = useState<string>('');
+  const [newFileTempName, setNewFileTempName] = useState<string>("");
   const [renameTargetId, setRenameTargetId] = useState<string | null>(null);
-  const [renameTempName, setRenameTempName] = useState<string>('');
-
-  // Selected language state
-  const [selectedLanguage, setSelectedLanguage] = useState<keyof typeof CODE_SNIPPETS>('javascript');
+  const [renameTempName, setRenameTempName] = useState<string>("");
+  const [selectedLanguage, setSelectedLanguage] = useState<keyof typeof CODE_SNIPPETS>("javascript");
 
   useEffect(() => {
     const handleClick = () =>
       setContextMenu({ visible: false, x: 0, y: 0, targetNode: null });
-    window.addEventListener('click', handleClick);
-    return () => window.removeEventListener('click', handleClick);
+    window.addEventListener("click", handleClick);
+    return () => window.removeEventListener("click", handleClick);
   }, []);
 
-  // When selected language changes, update the current file if it's a file
   useEffect(() => {
-    if (currentFile.type === 'file') {
+    if (currentFile.type === "file") {
       const updatedName = updateFileNameExtension(currentFile.name, selectedLanguage);
       const updatedFile: FileNode = {
         ...currentFile,
         language: selectedLanguage,
-        content: CODE_SNIPPETS[selectedLanguage] || '// new file',
+        content: CODE_SNIPPETS[selectedLanguage] || "// new file",
         name: updatedName,
       };
       setCurrentFile(updatedFile);
@@ -191,7 +117,7 @@ const App: React.FC = () => {
   };
 
   const handleRenameSubmit = (nodeId: string) => {
-    if (renameTempName.trim() === '') {
+    if (renameTempName.trim() === "") {
       setRenameTargetId(null);
       return;
     }
@@ -209,7 +135,7 @@ const App: React.FC = () => {
       if (node.id === currentFile.id) {
         const files = getAllFiles(newTree);
         setCurrentFile(
-          files[0] || { id: '', name: '', type: 'file', language: '', content: '' }
+          files[0] || { id: "", name: "", type: "file", language: "", content: "" }
         );
       }
     }
@@ -217,26 +143,26 @@ const App: React.FC = () => {
 
   const handleNewFileContext = (node: FileNode) => {
     let parentId: string | undefined;
-    if (node.type === 'folder') {
+    if (node.type === "folder") {
       parentId = node.id;
     } else {
       parentId = findParentId(tree, node.id) || undefined;
     }
     setNewFileParentId(parentId || null);
-    setNewFileTempName('');
+    setNewFileTempName("");
   };
 
   const handleNewFileSubmit = (parentId: string) => {
-    if (newFileTempName.trim() === '') {
+    if (newFileTempName.trim() === "") {
       setNewFileParentId(null);
       return;
     }
     const newNode: FileNode = {
       id: Date.now().toString(),
       name: newFileTempName,
-      type: 'file',
+      type: "file",
       language: selectedLanguage,
-      content: CODE_SNIPPETS[selectedLanguage] || '// new file',
+      content: CODE_SNIPPETS[selectedLanguage] || "// new file",
     };
     const updatedTree = addNodeToTree(tree, newNode, parentId);
     setTree(updatedTree);
@@ -244,30 +170,30 @@ const App: React.FC = () => {
     setCurrentFile(newNode);
   };
 
-  const handleAdd = (type: 'file' | 'folder', parentId?: string) => {
+  const handleAdd = (type: "file" | "folder", parentId?: string) => {
     const defaultFileNames: Record<keyof typeof CODE_SNIPPETS, string> = {
-      javascript: 'main.js',
-      typescript: 'main.ts',
-      python: 'main.py',
-      java: 'main.java',
-      csharp: 'main.cs',
-      html: 'main.html',
-      css: 'main.css',
-      react: 'main.jsx',
+      javascript: "main.js",
+      typescript: "main.ts",
+      python: "main.py",
+      java: "main.java",
+      csharp: "main.cs",
+      html: "main.html",
+      css: "main.css",
+      react: "main.jsx",
     };
 
     const name = window.prompt(
       `Enter ${type} name`,
-      type === 'file' ? defaultFileNames[selectedLanguage] : 'newFolder'
+      type === "file" ? defaultFileNames[selectedLanguage] : "newFolder"
     );
     if (!name) return;
     const newNode: FileNode = {
       id: Date.now().toString(),
       name,
       type,
-      language: type === 'file' ? selectedLanguage : undefined,
-      content: type === 'file' ? CODE_SNIPPETS[selectedLanguage] || '// new file' : undefined,
-      children: type === 'folder' ? [] : undefined,
+      language: type === "file" ? selectedLanguage : undefined,
+      content: type === "file" ? CODE_SNIPPETS[selectedLanguage] || "// new file" : undefined,
+      children: type === "folder" ? [] : undefined,
     };
     const updatedTree = parentId
       ? addNodeToTree(tree, newNode, parentId)
@@ -275,6 +201,7 @@ const App: React.FC = () => {
     setTree(updatedTree);
   };
 
+  
   const handleRun = async () => {
     if (!currentFile) return;
     try {
@@ -284,18 +211,62 @@ const App: React.FC = () => {
         typeof langCandidate === "string" && langCandidate in LANGUAGE_VERSIONS
           ? (langCandidate as keyof typeof LANGUAGE_VERSIONS)
           : "javascript";
-
-      const version = LANGUAGE_VERSIONS[language];
-      // If language is react, transpile JSX to JavaScript before execution.
-      const codeToRun =
-        language === "react"
-          ? transpileReact(currentFile.content || '')
-          : currentFile.content || '';
-      const result = await executeCode(language, version, codeToRun);
-      console.log(result);
-      setOutput(result?.run?.output);
+      const outputContainer = document.getElementById("output-container");
+      if (language === "react") {
+        const transpiledCode = transpileReact(currentFile.content || "");
+        const html = `
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <title>React Output</title>
+      <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+      <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+      <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    </head>
+    <body style="color:#ffffff">
+      <div id="root"></div>
+      <script type="text/babel">
+        (function() {
+          try {
+            ${transpiledCode}
+            
+            // Modern React 18 rendering
+            const rootElement = document.getElementById('root');
+            const root = ReactDOM.createRoot(rootElement);
+            root.render(<App />);
+          } catch (e) {
+            console.error(e);
+            const rootElement = document.getElementById('root');
+            if (rootElement) {
+              rootElement.innerHTML = '<pre style="color: red">' + e.toString() + '</pre>';
+            }
+          }
+        })();
+      </script>
+    </body>
+  </html>
+        `;
+  
+        if (outputContainer) {
+          outputContainer.innerHTML = "";
+          const iframe = document.createElement("iframe");
+          iframe.style.width = "100%";
+          iframe.style.height = "100%";
+          iframe.style.border = "none";
+          iframe.srcdoc = html;
+          outputContainer.appendChild(iframe);
+        }
+        setOutput("");
+      } else { 
+        const version = LANGUAGE_VERSIONS[language];
+        const codeToRun = currentFile.content || "";
+        const result = await executeCode(language, version, codeToRun);
+        console.log(result);
+        setOutput(result?.run?.output);
+      }
     } catch (error) {
-      alert("Error running code");
+      alert("Error running code: " + error);
     } finally {
       setLoading(false);
     }
@@ -361,9 +332,7 @@ const App: React.FC = () => {
             <span className="mr-2 text-sm">
               <FileIcon extension={currentFile.name.split(".").pop() || ""} />
             </span>
-            <span className="text-sm text-gray-200 truncate">
-              {currentFile.name}
-            </span>
+            <span className="text-sm text-gray-200 truncate">{currentFile.name}</span>
           </div>
           <div className="flex space-x-2">
             <button
@@ -371,11 +340,7 @@ const App: React.FC = () => {
               className="p-1 rounded hover:bg-[#094771] text-gray-200 cursor-pointer"
               title="Run"
             >
-              {loading ? (
-                <Spinner />
-              ) : (
-                <RunCodeIcon />
-              )}
+              {loading ? <Spinner /> : <RunCodeIcon />}
             </button>
             <button
               onClick={handlePreview}
@@ -391,7 +356,7 @@ const App: React.FC = () => {
           <div className={`${showOutput ? "w-1/2" : "w-full"} border-r border-[#3c3c3c]`}>
             <Editor
               height="100%"
-              language={currentFile.language}
+              language={currentFile.language=='react'?'javascript':currentFile.language}
               value={currentFile.content}
               theme="vs-dark"
               options={{ automaticLayout: true }}
@@ -407,10 +372,12 @@ const App: React.FC = () => {
             />
           </div>
           {showOutput && (
-            <div className="w-1/2 bg-[#1e1e1e] p-4 text-gray-300 overflow-auto">
-              <pre className="text-sm whitespace-pre-wrap">
-                {output || 'No output. Click "Run" or "Preview" above.'}
-              </pre>
+            <div id="output-container" className="w-1/2 bg-[#1e1e1e] p-4 text-gray-300 overflow-auto">
+              {currentFile.language !== "react" && (
+                <pre className="text-sm">
+                  {output || 'No output. Click "Run" or "Preview" above.'}
+                </pre>
+              )}
             </div>
           )}
         </div>

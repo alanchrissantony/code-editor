@@ -6,29 +6,79 @@ export const LANGUAGE_VERSIONS = {
   java: "15.0.2",
   csharp: "6.12.0",
   html: "5",
+  css: "3",
 };
 
 export const CODE_SNIPPETS = {
-  javascript: `\nfunction greet(name) {\n\tconsole.log("Hello, " + name + "!");\n}\n\ngreet("World");\n`,
-  typescript: `\ntype Params = {\n\tname: string;\n}\n\nfunction greet(data: Params) {\n\tconsole.log("Hello, " + data.name + "!");\n}\n\ngreet({ name: "World" });\n`,
-  python: `\ndef greet(name):\n\tprint("Hello, " + name + "!")\n\ngreet("World")\n`,
-  java: `\npublic class HelloWorld {\n\tpublic static void main(String[] args) {\n\t\tSystem.out.println("Hello World");\n\t}\n}\n`,
-  csharp: 'using System;\n\nnamespace HelloWorld\n{\n\tclass Hello {\n\t\tstatic void Main(string[] args) {\n\t\t\tConsole.WriteLine("Hello World in C#");\n\t\t}\n\t}\n}\n',
-  html: `\n<!DOCTYPE html>\n<html>\n  <head>\n    <title>Hello World</title>\n  </head>\n  <body>\n    <h1>Hello, World!</h1>\n  </body>\n</html>\n`,
-  css: `\nbody {\n  background-color: #fff;\n  color: #333;\n}\n`,
-  react: `
-import React from 'react';
+  javascript: `
+function greet(name) {
+  console.log("Hello, " + name + "!");
+}
 
+greet("World");
+`,
+  typescript: `
+type Params = {
+  name: string;
+}
+
+function greet(data: Params) {
+  console.log("Hello, " + data.name + "!");
+}
+
+greet({ name: "World" });
+`,
+  python: `
+def greet(name):
+    print("Hello, " + name + "!")
+    
+greet("World")
+`,
+  java: `
+public class HelloWorld {
+  public static void main(String[] args) {
+    System.out.println("Hello World");
+  }
+}
+`,
+  csharp: `
+using System;
+
+namespace HelloWorld {
+  class Hello {
+    static void Main(string[] args) {
+      Console.WriteLine("Hello World in C#");
+    }
+  }
+}
+`,
+  html: `
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World</title>
+  </head>
+  <body>
+    <h1>Hello, World!</h1>
+  </body>
+</html>
+`,
+  css: `
+body {
+  background-color: #fff;
+  color: #333;
+}
+`,
+  react: `
 const App = () => {
   return (
     <div>
-      <h1>Hello, World!</h1>
-      <p>This is a sample React component.</p>
+      <h1>Hello, React!</h1>
+      <p>This is a complete React component.</p>
     </div>
   );
 };
 
-export default App;
-  `,
+ReactDOM.render(<App />, document.getElementById('root'));
+`,
 };
-
